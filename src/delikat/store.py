@@ -47,6 +47,7 @@ class Store(object):
 
         # Per-user meta-data (title, comments, ..) about links.
         json = jsonlib.write({
+            'id': url_key,
             'url': url,
             'title': title,
             'description': description,

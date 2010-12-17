@@ -4,4 +4,18 @@ html
   body
     ol
       li py:for="l in links"
-        a href=${l.url} | ${l.title}
+        div
+          b
+            a href=${l.url} | ${l.title}
+        div
+          | [
+          a href=/l/${l.id} | edit
+          | |
+          a href=/x/${l.id} | delete
+          | ]
+          | [
+          | tags
+          span py:for="tag in l.tags"
+            | |
+            a href=/t/${tag} | ${tag}
+          | ]
