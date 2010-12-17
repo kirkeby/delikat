@@ -1,0 +1,11 @@
+del.ik.at -- A delicious Redis-backed bookmarking service
+=========================================================
+
+To import a del.icio.us XML dump::
+
+    $ python -m delikat.import < all.xml
+
+To run the user-facing web-app::
+
+    $ paster serve user.ini
+
