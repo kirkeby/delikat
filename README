@@ -1,11 +1,20 @@
 del.ik.at -- A delicious Redis-backed bookmarking service
 =========================================================
 
-To import a del.icio.us XML dump::
+Getting started
+---------------
 
-    $ python -m delikat.import < all.xml
+ 1. Install and start redis (>= 2.0).
 
-To run the user-facing web-app::
+ 2. Install delikat and dependencies in a virtualenv::
+
+        $ python setup.py develop
+
+ 2. Import a del.icio.us XML dump::
+
+        $ wget -O all.xml https://user:password@api.del.icio.us/v1/posts/all
+        $ python -m delikat.import < all.xml
+
+ 3. Run the user-facing web-app::
 
     $ paster serve src/delikat/web/user.ini --reload
-
