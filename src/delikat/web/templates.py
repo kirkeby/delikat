@@ -3,6 +3,7 @@ from genshi.output import DocType
 from genshi.template import MarkupTemplate, TemplateLoader
 import shpaml
 from StringIO import StringIO
+from paste.reloader import watch_file
 
 html_begin = '<html xmlns:py="http://genshi.edgewall.org/" \
                     xmlns:xi="http://www.w3.org/2001/XInclude"'
@@ -10,7 +11,6 @@ class ShpamlTemplate(MarkupTemplate):
     def __init__(self, f, **kwargs):
         html = shpaml.convert_text(f.read())
         html = html.replace('<html', html_begin)
-        print `html`
         html_f = StringIO(html)
         MarkupTemplate.__init__(self, html_f, **kwargs)
 
@@ -21,6 +21,7 @@ class OurTemplateLoader(TemplateLoader):
     '''A Genshi TemplateLoader which understand that different extensions map
     to different template classes.'''
     def load(self, name, cls=MarkupTemplate, relative_to=None):
+        watch_file(path.join(relative_to or template_root, name))
         _, ext = path.splitext(name)
         cls = template_class.get(ext, cls)
         return TemplateLoader.load(self, name,
