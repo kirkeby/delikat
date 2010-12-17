@@ -1,0 +1,7 @@
+html
+  head
+    title | del.ik.at
+  body
+    ol
+      li py:for="l in links"
+        a href=${l.url} | ${l.title}

@@ -7,5 +7,5 @@ To import a del.icio.us XML dump::
 
 To run the user-facing web-app::
 
-    $ paster serve user.ini
+    $ paster serve src/delikat/web/user.ini --reload
 
