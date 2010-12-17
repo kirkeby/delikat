@@ -1,0 +1,6 @@
+html
+  > xi:include href=macros.shpaml
+  head
+    title | del.ik.at
+  body
+    ${link_list(links)}

@@ -1,0 +1,18 @@
+html py:strip=True
+  ol py:def="link_list(links)"
+    li py:for="l in links"
+      div
+        b
+          a href=${l.url} | ${l.title}
+      div
+        | [
+        a href=/l/${l.id} | edit
+        | |
+        a href=/x/${l.id} | delete
+        | ]
+        | [
+        | tags
+        span py:for="tag in l.tags"
+          | |
+          a href=${tag} | ${tag}
+        | ]

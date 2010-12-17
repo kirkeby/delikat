@@ -55,8 +55,12 @@ class Store(object):
         })
         self.redis.set('link-info:%s:%s' % (user_key, url_key), json)
 
-    def latest_user_links(self, user_key, count=10):
-        url_keys = self.redis.zrange('tag:user:' + user_key,
+    def latest_user_links(self, user_key, tags=[], count=10):
+        keys = ['tag:user:' + user_key]
+        keys.extend('tag:' + tag for tag in tags)
+        # FIXME - This tmp key thing sucks. And it should be unique. And tmp.
+        self.redis.zinterstore('tmp:search:' + user_key, keys)
+        url_keys = self.redis.zrange('tmp:search:' + user_key,
                                      1, count, desc=True)
         if not url_keys:
             return []
