@@ -29,12 +29,12 @@ def get_latest_links(ctx, info_for, tags):
     saved by the system, by the current user and by the given other user.'''
 
     info_buckets = [
-        ('public', 'url'),
-        ('mine', 'user-link-info:' + ctx.user),
-        ('here', 'user-link-info:' + ctx.user),
+        ('public', 'public'),
+        ('mine', 'user:' + ctx.user),
+        ('here', 'user:' + info_for),
     ]
     url_keys = ctx.store.get_latest_links(tags)
-    return ctx.store.get_url_info(url_keys, info_buckets)
+    return ctx.store.get_link_info(url_keys, info_buckets)
 
 @page
 def get_user_index(ctx, user):

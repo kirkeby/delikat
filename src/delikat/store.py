@@ -40,14 +40,14 @@ class Store(object):
         self.redis.zinterstore('tmp:search', keys)
         return self.redis.zrange('tmp:search', 0, count, desc=True)
 
-    def get_url_info(self, url_keys, info_buckets):
+    def get_link_info(self, url_keys, info_buckets):
         '''Get info for each pair of URL and info-bucket.
 
         For example:
 
         >>> store.get_url_info(['abc...', 'def...'],
-                               [('public', 'public-link-info'),
-                                ('private', 'user-link-info:root')])
+                               [('public', 'public'),
+                                ('private', 'user:root')])
         [{'id': 'abc...',
           'public': <public-link-info:abc...>,
           'private': <user-link-info:root:abc...>},
@@ -60,21 +60,21 @@ class Store(object):
                      for url_key in url_keys
                      for prefix in bucket_prefix]
         info_values = [jsonlib.read(json or '{}')
-                       for json in self.redis.mget(info_keys)]
+                       for json in self.redis.hmget('link-info', info_keys)]
         return [dict(chain(zip(bucket_keys, values), [('id', id)]))
                 for id, values in zip(url_keys, grouper(3, info_values))]
 
     ### do_ are for background workers.
     def do_save_url(self, url):
         key = self._url_key(url)
-        self.redis.setnx('url:' + key, jsonlib.write({
+        self.redis.hsetnx('link-info', 'public:' + key, jsonlib.write({
             'url': url,
             'created': time(),
         }))
         return key
 
     def do_save_user(self, login):
-        self.redis.setnx('user:' + login, jsonlib.write({
+        self.redis.hsetnx('user', login, jsonlib.write({
             'login': login,
             'created': time(),
         }))
@@ -89,10 +89,11 @@ class Store(object):
             self.redis.zadd('tag:' + tag, url_key, created)
 
     def do_save_link_user(self, values):
-        key = 'user-link-info:%(user)s:%(id)s' % values
+        key = 'user:%(user)s:%(id)s' % values
         stamp = values.get('stamp') or time()
 
-        old_values = jsonlib.read(self.redis.get(key) or '{}')
+        old_json = self.redis.hget('link-info', key) or '{}'
+        old_values = jsonlib.read(old_json)
         self.do_remove_tags(values['id'], old_values.get('tags', []))
         self.do_add_tags(stamp, values['id'], values['tags'])
 
@@ -103,7 +104,7 @@ class Store(object):
             'tags': values['tags'],
             'stamp': stamp,
         })
-        self.redis.set(key, json)
+        self.redis.hset('link-info', key, json)
 
     def do_save_link(self, values):
         values['id'] = self.do_save_url(values['url'])
