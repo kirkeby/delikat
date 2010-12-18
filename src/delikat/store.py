@@ -24,14 +24,14 @@ class Store(object):
     ### queue_ are for the frontend web-app
     def queue_save_link(self, user_key, url, title, description, tags,
                         created=None):
-        self.redis.rpush('q:new-link', jsonlib.write({
+        self.push_queue('new-link', {
             'stamp': created,
             'user': user_key,
             'url': url,
             'title': title,
             'description': description,
             'tags': tags,
-        }))
+        })
 
     ### get_ are for the frontend web-app
     def get_latest_links(self, tags, count=10):
@@ -90,17 +90,18 @@ class Store(object):
 
     def do_save_link_user(self, values):
         key = 'user-link-info:%(user)s:%(id)s' % values
+        stamp = values.get('stamp') or time()
 
         old_values = jsonlib.read(self.redis.get(key) or '{}')
         self.do_remove_tags(values['id'], old_values.get('tags', []))
-        self.do_add_tags(values['stamp'], values['id'], values['tags'])
+        self.do_add_tags(stamp, values['id'], values['tags'])
 
         json = jsonlib.write({
             'created': old_values.get('created', time()),
             'title': values['title'],
             'description': values['description'],
             'tags': values['tags'],
-            'stamp': values.get('stamp', time()),
+            'stamp': stamp,
         })
         self.redis.set(key, json)
 
@@ -108,4 +109,13 @@ class Store(object):
         values['id'] = self.do_save_url(values['url'])
         values['tags'] = values['tags'][:]
         values['tags'].append('user:' + values['user'])
+        values['tags'] = list(set(values['tags']))
         self.do_save_link_user(values)
+
+    ### Various operations related to queues.
+    def pop_queue(self, name):
+        queue, value = self.redis.blpop('q:' + name)
+        return jsonlib.read(value)
+
+    def push_queue(self, name, values):
+        self.redis.rpush('q:' + name, jsonlib.write(values))

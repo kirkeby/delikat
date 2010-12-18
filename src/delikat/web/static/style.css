@@ -1,0 +1,8 @@
+fieldset {
+    display: block;
+    border: none;
+}
+
+.b {
+    font-weight: bold;
+}

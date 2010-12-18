@@ -5,6 +5,7 @@ from delikat.store import Store
 urls = Map([
     Rule('/<user>/', endpoint='user_index', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
+    Rule('/l/new', endpoint='new_link', methods=['GET', 'POST']),
 ])
 
 def handler(ctx):
@@ -42,3 +43,17 @@ def get_user_index(ctx, user):
 @page
 def get_user_tag(ctx, user, tag):
     ctx.values['links'] = get_latest_links(ctx, user, ['user:' + user, tag])
+
+@page
+def get_new_link(ctx):
+    pass
+
+@page
+def post_new_link(ctx):
+    # FIXME - We need a form validation library.
+    ctx.store.queue_save_link(ctx.user,
+                              ctx.request.form['url'],
+                              ctx.request.form['title'],
+                              ctx.request.form.get('description', ''),
+                              ctx.request.form['tags'].split())
+    ctx.values['notice'] = 'Ok.'
