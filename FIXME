@@ -1,0 +1,4 @@
+* Implement private links by storing public and private links with
+  different tags. And teach the worker about them.
+* Need formvalidation - for instance only allow ASCII tags (or at-least
+  not tags which overlap the system ones...)
