@@ -6,7 +6,7 @@ from store import Store
 def import_delicious_dump(store, f, username):
     doc = lxml.etree.parse(f)
 
-    user_key = store.save_user(username)
+    user_key = store.do_save_user(username)
 
     for post in doc.xpath('//post'):
         url = post.get('href')
@@ -14,9 +14,16 @@ def import_delicious_dump(store, f, username):
         description = post.get('extended')
         tags = post.get('tag').split()
 
-        created = mktime(strptime(post.get('time'), '%Y-%m-%dT%H:%M:%SZ'))
+        stamp = mktime(strptime(post.get('time'), '%Y-%m-%dT%H:%M:%SZ'))
 
-        store.save_link(user_key, url, title, description, tags, created)
+        store.do_save_link({
+            'stamp': stamp,
+            'user': user_key,
+            'url': url,
+            'title': title,
+            'description': description,
+            'tags': tags,
+        })
 
 if __name__ == '__main__':
     import sys

@@ -11,6 +11,7 @@ class Context(object):
         self.response = Response(mimetype='text/html')
         self.adapter = url_map.bind_to_environ(environ)
         self.endpoint, self.url_values = self.adapter.match()
+        self.user = 'sune'
         self.values = {}
 
 class Application(object):

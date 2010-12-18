@@ -1,7 +1,10 @@
+from itertools import chain
 from hashlib import sha1
 from time import time
 import redis
 import jsonlib
+
+from delikat.prelude import grouper
 
 __all__ = ['Store']
 
@@ -18,7 +21,51 @@ class Store(object):
     def _url_key(self, url):
         return sha1(url).hexdigest()
 
-    def save_url(self, url):
+    ### queue_ are for the frontend web-app
+    def queue_save_link(self, user_key, url, title, description, tags,
+                        created=None):
+        self.redis.rpush('q:new-link', jsonlib.write({
+            'stamp': created,
+            'user': user_key,
+            'url': url,
+            'title': title,
+            'description': description,
+            'tags': tags,
+        }))
+
+    ### get_ are for the frontend web-app
+    def get_latest_links(self, tags, count=10):
+        keys = ['tag:' + tag for tag in tags]
+        # FIXME - This tmp key thing sucks. And it should be unique. And tmp.
+        self.redis.zinterstore('tmp:search', keys)
+        return self.redis.zrange('tmp:search', 1, count, desc=True)
+
+    def get_url_info(self, url_keys, info_buckets):
+        '''Get info for each pair of URL and info-bucket.
+
+        For example:
+
+        >>> store.get_url_info(['abc...', 'def...'],
+                               [('public', 'public-link-info'),
+                                ('private', 'user-link-info:root')])
+        [{'id': 'abc...',
+          'public': <public-link-info:abc...>,
+          'private': <user-link-info:root:abc...>},
+         {'id': 'def...',
+          'public': <public-link-info:def...>,
+          'private': <user-link-info:root:def...>}]
+        '''
+        bucket_keys, bucket_prefix = zip(*info_buckets)
+        info_keys = ['%s:%s' % (prefix, url_key)
+                     for url_key in url_keys
+                     for prefix in bucket_prefix]
+        info_values = [jsonlib.read(json or '{}')
+                       for json in self.redis.mget(info_keys)]
+        return [dict(chain(zip(bucket_keys, values), [('id', id)]))
+                for id, values in zip(url_keys, grouper(3, info_values))]
+
+    ### do_ are for background workers.
+    def do_save_url(self, url):
         key = self._url_key(url)
         self.redis.setnx('url:' + key, jsonlib.write({
             'url': url,
@@ -26,44 +73,39 @@ class Store(object):
         }))
         return key
 
-    def save_user(self, login):
+    def do_save_user(self, login):
         self.redis.setnx('user:' + login, jsonlib.write({
             'login': login,
             'created': time(),
         }))
         return login
 
-    def save_link(self, user_key, url, title, description, tags,
-                  created=None):
-        if created is None:
-            created = time()
+    def do_remove_tags(self, url_key, tags):
+        for tag in tags:
+            self.redis.zrem('tag:' + tag, url_key)
 
-        url_key = self.save_url(url)
-
-        self.redis.zadd('tag:user:' + user_key, url_key, created)
-        # FIXME - Remove old tags first.
+    def do_add_tags(self, created, url_key, tags):
         for tag in tags:
             self.redis.zadd('tag:' + tag, url_key, created)
 
-        # Per-user meta-data (title, comments, ..) about links.
-        json = jsonlib.write({
-            'id': url_key,
-            'url': url,
-            'title': title,
-            'description': description,
-            'tags': tags,
-        })
-        self.redis.set('link-info:%s:%s' % (user_key, url_key), json)
+    def do_save_link_user(self, values):
+        key = 'user-link-info:%(user)s:%(id)s' % values
 
-    def latest_user_links(self, user_key, tags=[], count=10):
-        keys = ['tag:user:' + user_key]
-        keys.extend('tag:' + tag for tag in tags)
-        # FIXME - This tmp key thing sucks. And it should be unique. And tmp.
-        self.redis.zinterstore('tmp:search:' + user_key, keys)
-        url_keys = self.redis.zrange('tmp:search:' + user_key,
-                                     1, count, desc=True)
-        if not url_keys:
-            return []
-        link_keys = ['link-info:%s:%s' % (user_key, url_key)
-                     for url_key in url_keys]
-        return map(jsonlib.read, self.redis.mget(link_keys))
+        old_values = jsonlib.read(self.redis.get(key) or '{}')
+        self.do_remove_tags(values['id'], old_values.get('tags', []))
+        self.do_add_tags(values['stamp'], values['id'], values['tags'])
+
+        json = jsonlib.write({
+            'created': old_values.get('created', time()),
+            'title': values['title'],
+            'description': values['description'],
+            'tags': values['tags'],
+            'stamp': values.get('stamp', time()),
+        })
+        self.redis.set(key, json)
+
+    def do_save_link(self, values):
+        values['id'] = self.do_save_url(values['url'])
+        values['tags'] = values['tags'][:]
+        values['tags'].append('user:' + values['user'])
+        self.do_save_link_user(values)

@@ -3,7 +3,7 @@ html py:strip=True
     li py:for="l in links"
       div
         b
-          a href=${l.url} | ${l.title}
+          a href=${l.public.url} | ${l.here.title}
       div
         | [
         a href=/l/${l.id} | edit
@@ -12,7 +12,7 @@ html py:strip=True
         | ]
         | [
         | tags
-        span py:for="tag in l.tags"
+        span py:for="tag in l.here.tags"
           | |
           a href=${tag} | ${tag}
         | ]
