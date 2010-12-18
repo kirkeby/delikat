@@ -38,7 +38,7 @@ class Store(object):
         keys = ['tag:' + tag for tag in tags]
         # FIXME - This tmp key thing sucks. And it should be unique. And tmp.
         self.redis.zinterstore('tmp:search', keys)
-        return self.redis.zrange('tmp:search', 1, count, desc=True)
+        return self.redis.zrange('tmp:search', 0, count, desc=True)
 
     def get_url_info(self, url_keys, info_buckets):
         '''Get info for each pair of URL and info-bucket.
