@@ -19,7 +19,7 @@ class Store(object):
         pass
 
     def _url_key(self, url):
-        return sha1(url).hexdigest()
+        return sha1(url.encode('utf-8')).hexdigest()
 
     ### queue_ are for the frontend web-app
     def queue_save_link(self, user_key, url, title, description, tags,
