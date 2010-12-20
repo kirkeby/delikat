@@ -21,5 +21,7 @@ setup(
         ### These are for running the web-apps in development.
         'PasteScript',
         'WSGIUtils',
+        ### These are for running all our processes.
+        'supervisor',
     ],
 )

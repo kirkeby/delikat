@@ -15,6 +15,6 @@ Getting started
         $ wget -O all.xml https://user:password@api.del.icio.us/v1/posts/all
         $ python -m delikat.import < all.xml
 
- 3. Run the user-facing web-app::
+ 3. Run supervisord::
 
-    $ paster serve src/delikat/web/user.ini --reload
+    $ supervisord -n
