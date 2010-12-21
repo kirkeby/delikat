@@ -4,7 +4,7 @@ from werkzeug.routing import Map, Rule
 from delikat.store import Store
 
 urls = Map([
-    Rule('/<user>/', endpoint='user_index', methods=['GET']),
+    Rule('/<user>/', endpoint='user_tag', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
     Rule('/l/new', endpoint='new_link', methods=['GET', 'POST']),
 ])
@@ -34,16 +34,12 @@ def template_links(links):
             last_date = link['date']
     return links
 
-@page
-def get_user_index(ctx, user):
-    ctx.values['links'] = \
-        template_links(ctx.store.get_latest_links({'user': user}))
 
 @page
-def get_user_tag(ctx, user, tag):
+def get_user_tag(ctx, user, tag=None):
+    tags = tag.split('+') if tag else None
     ctx.values['links'] = \
-        template_links(ctx.store.get_latest_links({'user': user,
-                                                   'tags': tag}))
+        template_links(ctx.store.get_latest_links(user=user, tags=tags))
 
 @page
 def get_new_link(ctx):

@@ -34,7 +34,10 @@ class Store(object):
         })
 
     ### get_ are for the frontend web-app
-    def get_latest_links(self, filter, count=50):
+    def get_latest_links(self, user, tags, count=50):
+        filter = {'user': user}
+        if tags:
+            filter['tags'] = {'$all': tags}
         return list(self.db.links.find(filter).limit(count).sort('stamp', -1))
 
     ### do_ are for background workers.
