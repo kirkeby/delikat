@@ -1,6 +1,5 @@
 from datetime import datetime
 from functools import update_wrapper
-from itertools import chain, groupby
 from werkzeug.routing import Map, Rule
 from delikat.store import Store
 
@@ -35,17 +34,13 @@ def template_links(links):
             last_date = link['date']
     return links
 
-def link_tags(links):
-    all_tags = sorted(chain(*(l['tags'] for l in links)))
-    return [{'tag': tag, 'count': len(list(tags))}
-            for tag, tags in groupby(all_tags)]
-
 @page
 def get_user_tag(ctx, user, tag=None):
     tags = tag.split('+') if tag else None
     ctx.values['links'] = \
         template_links(ctx.store.get_latest_links(user=user, tags=tags))
-    ctx.values['related_tags'] = link_tags(ctx.values['links'])
+    ctx.values['all_tags'] = ctx.store.get_user_tags(user, tags=[])
+    ctx.values['related_tags'] = ctx.store.get_user_tags(user, tags=tags)
 
 @page
 def get_new_link(ctx):

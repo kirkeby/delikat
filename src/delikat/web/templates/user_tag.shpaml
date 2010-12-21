@@ -7,5 +7,7 @@ html
     #right
       h2 | related
       ${tag_list(related_tags, plus=context.request.path)}
+      h2 | all
+      ${tag_list(all_tags, plus=None)}
     #main
       ${link_list(links)}

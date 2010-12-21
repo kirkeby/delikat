@@ -1,4 +1,4 @@
-from itertools import chain
+from itertools import chain, groupby
 from hashlib import sha1
 from time import time
 import redis
@@ -39,6 +39,16 @@ class Store(object):
         if tags:
             filter['tags'] = {'$all': tags}
         return list(self.db.links.find(filter).limit(count).sort('stamp', -1))
+
+    def get_user_tags(self, user, tags):
+        filter = {'user': user}
+        if tags:
+            filter['tags'] = {'$all': tags}
+        links = self.db.links.find(filter, {'tags': 1})
+        all_tags = sorted(chain(*(l['tags'] for l in links)),
+                          key=lambda s: s.lower())
+        return [{'tag': tag, 'count': len(list(tags))}
+                for tag, tags in groupby(all_tags)]
 
     ### do_ are for background workers.
     def do_save_link(self, values):
