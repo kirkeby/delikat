@@ -21,7 +21,8 @@ class OurTemplateLoader(TemplateLoader):
     '''A Genshi TemplateLoader which understand that different extensions map
     to different template classes.'''
     def load(self, name, cls=MarkupTemplate, relative_to=None):
-        watch_file(path.join(relative_to or template_root, name))
+        abs = path.join(template_root, path.dirname(relative_to or ''), name)
+        watch_file(abs)
         _, ext = path.splitext(name)
         cls = template_class.get(ext, cls)
         return TemplateLoader.load(self, name,
