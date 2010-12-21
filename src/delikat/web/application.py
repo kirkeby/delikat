@@ -3,6 +3,7 @@ from werkzeug.exceptions import HTTPException
 from resolver import resolve
 
 from genshi.output import DocType
+from genshi.filters import HTMLFormFiller
 from delikat.web.templates import template_loader
 
 class Context(object):
@@ -44,6 +45,7 @@ class Application(object):
             url_for=lambda e, **v: ctx.adapter.build(e, v),
             **ctx.values
         )
+        stream = stream | HTMLFormFiller(data=ctx.values)
         return stream.render('html', doctype=DocType.get('html5'))
 
     def template_for(self, ctx):

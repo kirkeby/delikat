@@ -4,9 +4,9 @@ from werkzeug.routing import Map, Rule
 from delikat.store import Store
 
 urls = Map([
+    Rule('/_/save', endpoint='save_link', methods=['GET', 'POST']),
     Rule('/<user>/', endpoint='user_tag', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
-    Rule('/l/new', endpoint='new_link', methods=['GET', 'POST']),
 ])
 
 def handler(ctx):
@@ -43,15 +43,24 @@ def get_user_tag(ctx, user, tag=None):
     ctx.values['related_tags'] = ctx.store.get_user_tags(user, tags=tags)
 
 @page
-def get_new_link(ctx):
-    pass
+def get_save_link(ctx):
+    url = ctx.request.args.get('url', '')
+    values = ctx.store.get_user_link(ctx.user, url)
+    values = values or {
+        'url': url,
+        'title': ctx.request.args.get('title'),
+    }
+    ctx.values.update(values)
 
 @page
-def post_new_link(ctx):
+def post_save_link(ctx):
     # FIXME - We need a form validation library.
-    ctx.store.queue_save_link(ctx.user,
-                              ctx.request.form['url'],
-                              ctx.request.form['title'],
-                              ctx.request.form.get('description', ''),
-                              ctx.request.form['tags'].split())
+    values = {
+        '_id': ctx.request.form.get('_id'),
+        'url': ctx.request.form['url'],
+        'title': ctx.request.form['title'],
+        'description': ctx.request.form.get('description', ''),
+        'tags': ctx.request.form['tags'].split(),
+    }
+    ctx.store.queue_save_link(ctx.user, values)
     ctx.values['notice'] = 'Ok.'

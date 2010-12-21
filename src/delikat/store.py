@@ -22,16 +22,10 @@ class Store(object):
         pass
 
     ### queue_ are for the frontend web-app
-    def queue_save_link(self, user_key, url, title, description, tags,
-                        created=None):
-        self.push_queue('new-link', {
-            'stamp': created or time(),
-            'user': user_key,
-            'url': url,
-            'title': title,
-            'description': description,
-            'tags': tags,
-        })
+    def queue_save_link(self, user_key, values):
+        values['user'] = user_key
+        values['stamp'] = values.get('stamp', time())
+        self.push_queue('new-link', values)
 
     ### get_ are for the frontend web-app
     def get_latest_links(self, user, tags, count=50):
@@ -50,20 +44,33 @@ class Store(object):
         return [{'tag': tag, 'count': len(list(tags))}
                 for tag, tags in groupby(all_tags)]
 
+    def get_user_link(self, user, url):
+        return self.db.links.find_one({'user': user, 'url': url})
+
     ### do_ are for background workers.
+    def _find_old_link(self, values):
+        for key in ['_id', 'url']:
+            if key not in values:
+                continue
+            v = self.db.links.find_one({'user': values['user'],
+                                        key: values[key]})
+            if v:
+                return v
+
     def do_save_link(self, values):
         if not 'stamp' in values:
             values['stamp'] = time()
-        old_values = self.db.links.find_one({'user': values['user'],
-                                             'url': values['url']})
+        old_values = self._find_old_link(values)
         if old_values:
-            values['_id'] = old_values['_id']
+            values['_id'] = str(old_values['_id'])
+        elif '_id' in values:
+            del values['_id']
         self.db.links.save(values)
 
     ### Various operations related to queues.
     def pop_queue(self, name):
         queue, value = self.redis.blpop('q:' + name)
-        return jsonlib.read(value)
+        return jsonlib.read(value, use_float=True)
 
     def push_queue(self, name, values):
         self.redis.rpush('q:' + name, jsonlib.write(values))

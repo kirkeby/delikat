@@ -1,0 +1,23 @@
+html
+  > xi:include href=page.shpaml
+  head
+    title | del.ik.at -- save link
+  body
+    #main
+      h1 | save link
+      h2 py:if=defined('notice') | ${notice}
+      form method=POST action=${url_for('save_link')}
+        > input type=hidden name=_id
+        fieldset
+          label
+            .b | url:
+            > input name=url
+          label
+            .b | title:
+            > input name=title
+          label
+            .b | tags:
+            > input name=tags
+
+        fieldset
+          > input type=submit value="make it so!"

@@ -5,9 +5,9 @@ html
     title | del.ik.at
   body
     #right
-      h2 | related
+      h2 py:if=related_tags | related
       ${tag_list(related_tags, plus=context.request.path)}
-      h2 | all
+      h2 py:if=all_tags | all
       ${tag_list(all_tags, plus=None)}
     #main
       ${link_list(links)}
