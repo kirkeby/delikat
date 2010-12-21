@@ -10,5 +10,6 @@ html py:strip=""
           a href=/ | de.li.kat
         .right
           a href=/${context.user}/ | ${context.user}
+          a href=/_/help | help
           | logout
       | ${select("*|text()")}

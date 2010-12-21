@@ -5,6 +5,7 @@ from delikat.store import Store
 
 urls = Map([
     Rule('/_/save', endpoint='save_link', methods=['GET', 'POST']),
+    Rule('/_/help', endpoint='help', methods=['GET']),
     Rule('/<user>/', endpoint='user_tag', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
 ])
@@ -64,3 +65,19 @@ def post_save_link(ctx):
     }
     ctx.store.queue_save_link(ctx.user, values)
     ctx.values['notice'] = 'Ok.'
+
+bookmarklet = '''
+    javascript:(function() {
+        f = '__save_url__'
+          + '?url=' + encodeURIComponent(window.location.href)
+          + '&title=' + encodeURIComponent(document.title);
+        window.open(f, 'location=yes,links=no,scrollbars=no,' +
+                       'toolbar=no,width=550,height=550');
+    })();
+'''
+
+@page
+def get_help(ctx):
+    save_url = ctx.adapter.build('save_link', force_external=True)
+    ctx.values['bookmarklet'] = \
+        ''.join(bookmarklet.split()).replace('__save_url__', save_url)
