@@ -1,18 +1,12 @@
 html py:strip=True
-  ol py:def="link_list(links)"
+  ol.links py:def="link_list(links)"
     li py:for="l in links"
-      div
-        b
-          a href=${l['url']} | ${l['title']}
-      div
-        | [
+      .stamp py:if=l.date | ${l.date}
+      .link
+        a href=${l['url']} | ${l['title']}
+      .description py:if=l.description | ${l.description}
+      .actions
         a href=/l/${l['_id']} | edit
-        | |
         a href=/x/${l['_id']} | delete
-        | ]
-        | [
-        | tags
-        span py:for="tag in l['tags']"
-          | |
-          a href=${tag} | ${tag}
-        | ]
+      .tags
+        a py:for="tag in l['tags']" href=${tag} | ${tag}

@@ -1,5 +1,6 @@
 html
   > xi:include href=macros.shpaml
+  > xi:include href=page.shpaml
   head
     title | del.ik.at
   body

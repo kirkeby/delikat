@@ -2,7 +2,62 @@ fieldset {
     display: block;
     border: none;
 }
-
 .b {
     font-weight: bold;
+}
+
+a, a:visited, a:hover {
+    color: black;
+}
+
+.links {
+    list-style-type: none;
+    padding-left: 3.5em;
+}
+.links > li {
+    margin-top: .2em;
+}
+
+.links .stamp {
+    position: absolute;
+    left: 0.1em;
+    width: 3.33em;
+    text-align: right;
+    color: #fedabe;
+}
+
+.links a {
+    font-size: 125%;
+    text-decoration: none;
+}
+
+.link a {
+    display: block;
+}
+.links .link:hover a {
+    text-decoration: underline;
+}
+
+.links .description {
+    color: #666;
+}
+
+.actions, .tags {
+    display: inline-block;
+}
+
+.links .tags a {
+    margin-right: .3em;
+    padding: 0 .2em;
+    background-color: #fed;
+}
+.links .tags a:hover {
+    text-decoration: underline;
+}
+
+.links .actions a {
+    color: #abe;
+}
+.links .actions a:hover {
+    text-decoration: underline;
 }

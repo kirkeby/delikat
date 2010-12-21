@@ -1,3 +1,4 @@
+from datetime import datetime
 from functools import update_wrapper
 from werkzeug.routing import Map, Rule
 from delikat.store import Store
@@ -21,14 +22,28 @@ def page(f):
     update_wrapper(wrapper, f)
     return wrapper
 
+def template_links(links):
+    'Modify list of links with values used by templates.'
+    last_date = None
+    for link in links:
+        link['stamp'] = datetime.utcfromtimestamp(link['stamp'])
+        link['date'] = link['stamp'].strftime('%e. %b %Y')
+        if link['date'] == last_date:
+            link['date'] = None
+        else:
+            last_date = link['date']
+    return links
+
 @page
 def get_user_index(ctx, user):
-    ctx.values['links'] = ctx.store.get_latest_links({'user': user})
+    ctx.values['links'] = \
+        template_links(ctx.store.get_latest_links({'user': user}))
 
 @page
 def get_user_tag(ctx, user, tag):
-    ctx.values['links'] = ctx.store.get_latest_links({'user': user,
-                                                      'tags': tag})
+    ctx.values['links'] = \
+        template_links(ctx.store.get_latest_links({'user': user,
+                                                   'tags': tag}))
 
 @page
 def get_new_link(ctx):
