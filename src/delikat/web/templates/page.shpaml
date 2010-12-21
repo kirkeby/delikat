@@ -5,4 +5,11 @@ html py:strip=""
       | ${select("*")}
   py:match path=body once=true
     body py:attrs=select('@*')
-      | ${select("*|text()")}
+      #top
+        .left
+          a href=/ | de.li.kat
+        .right
+          a href=/${user}/ | ${user}
+          | logout
+      #main
+        | ${select("*|text()")}

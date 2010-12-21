@@ -12,7 +12,9 @@ class Context(object):
         self.adapter = url_map.bind_to_environ(environ)
         self.endpoint, self.url_values = self.adapter.match()
         self.user = 'sune'
-        self.values = {}
+        self.values = {
+            'user': self.user,
+        }
 
 class Application(object):
     def __init__(self, url_map, handler):
