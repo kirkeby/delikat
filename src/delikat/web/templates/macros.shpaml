@@ -3,16 +3,16 @@ html py:strip=True
     li py:for="l in links"
       div
         b
-          a href=${l.public.url} | ${l.here.title}
+          a href=${l['url']} | ${l['title']}
       div
         | [
-        a href=/l/${l.id} | edit
+        a href=/l/${l['_id']} | edit
         | |
-        a href=/x/${l.id} | delete
+        a href=/x/${l['_id']} | delete
         | ]
         | [
         | tags
-        span py:for="tag in l.here.tags"
+        span py:for="tag in l['tags']"
           | |
           a href=${tag} | ${tag}
         | ]

@@ -21,28 +21,14 @@ def page(f):
     update_wrapper(wrapper, f)
     return wrapper
 
-def get_latest_links(ctx, info_for, tags):
-    '''Get latest links with given tags for current user.
-
-    Return a list of dicts with keys 'public', 'private' and if info_for is
-    given also 'other'; each of these contains the information for each link
-    saved by the system, by the current user and by the given other user.'''
-
-    info_buckets = [
-        ('public', 'public'),
-        ('mine', 'user:' + ctx.user),
-        ('here', 'user:' + info_for),
-    ]
-    url_keys = ctx.store.get_latest_links(tags)
-    return ctx.store.get_link_info(url_keys, info_buckets)
-
 @page
 def get_user_index(ctx, user):
-    ctx.values['links'] = get_latest_links(ctx, user, ['user:' + user])
+    ctx.values['links'] = ctx.store.get_latest_links({'user': user})
 
 @page
 def get_user_tag(ctx, user, tag):
-    ctx.values['links'] = get_latest_links(ctx, user, ['user:' + user, tag])
+    ctx.values['links'] = ctx.store.get_latest_links({'user': user,
+                                                      'tags': tag})
 
 @page
 def get_new_link(ctx):

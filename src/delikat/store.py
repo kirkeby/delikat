@@ -3,6 +3,7 @@ from hashlib import sha1
 from time import time
 import redis
 import jsonlib
+import pymongo
 
 from delikat.prelude import grouper
 
@@ -11,6 +12,8 @@ __all__ = ['Store']
 class Store(object):
     def __init__(self):
         self.redis = redis.Redis()
+        self.mongo = pymongo.connection.Connection()
+        self.db = self.mongo.delikat
 
     def __enter__(self):
         return self
@@ -18,14 +21,11 @@ class Store(object):
     def __exit__(self, type, value, traceback):
         pass
 
-    def _url_key(self, url):
-        return sha1(url.encode('utf-8')).hexdigest()
-
     ### queue_ are for the frontend web-app
     def queue_save_link(self, user_key, url, title, description, tags,
                         created=None):
         self.push_queue('new-link', {
-            'stamp': created,
+            'stamp': created or time(),
             'user': user_key,
             'url': url,
             'title': title,
@@ -34,84 +34,18 @@ class Store(object):
         })
 
     ### get_ are for the frontend web-app
-    def get_latest_links(self, tags, count=10):
-        keys = ['tag:' + tag for tag in tags]
-        # FIXME - This tmp key thing sucks. And it should be unique. And tmp.
-        self.redis.zinterstore('tmp:search', keys)
-        return self.redis.zrange('tmp:search', 0, count, desc=True)
-
-    def get_link_info(self, url_keys, info_buckets):
-        '''Get info for each pair of URL and info-bucket.
-
-        For example:
-
-        >>> store.get_url_info(['abc...', 'def...'],
-                               [('public', 'public'),
-                                ('private', 'user:root')])
-        [{'id': 'abc...',
-          'public': <public-link-info:abc...>,
-          'private': <user-link-info:root:abc...>},
-         {'id': 'def...',
-          'public': <public-link-info:def...>,
-          'private': <user-link-info:root:def...>}]
-        '''
-        bucket_keys, bucket_prefix = zip(*info_buckets)
-        info_keys = ['%s:%s' % (prefix, url_key)
-                     for url_key in url_keys
-                     for prefix in bucket_prefix]
-        info_values = [jsonlib.read(json or '{}')
-                       for json in self.redis.hmget('link-info', info_keys)]
-        return [dict(chain(zip(bucket_keys, values), [('id', id)]))
-                for id, values in zip(url_keys, grouper(3, info_values))]
+    def get_latest_links(self, filter, count=10):
+        return self.db.links.find(filter).limit(count).sort('stamp', -1)
 
     ### do_ are for background workers.
-    def do_save_url(self, url):
-        key = self._url_key(url)
-        self.redis.hsetnx('link-info', 'public:' + key, jsonlib.write({
-            'url': url,
-            'created': time(),
-        }))
-        return key
-
-    def do_save_user(self, login):
-        self.redis.hsetnx('user', login, jsonlib.write({
-            'login': login,
-            'created': time(),
-        }))
-        return login
-
-    def do_remove_tags(self, url_key, tags):
-        for tag in tags:
-            self.redis.zrem('tag:' + tag, url_key)
-
-    def do_add_tags(self, created, url_key, tags):
-        for tag in tags:
-            self.redis.zadd('tag:' + tag, url_key, created)
-
-    def do_save_link_user(self, values):
-        key = 'user:%(user)s:%(id)s' % values
-        stamp = values.get('stamp') or time()
-
-        old_json = self.redis.hget('link-info', key) or '{}'
-        old_values = jsonlib.read(old_json)
-        self.do_remove_tags(values['id'], old_values.get('tags', []))
-        self.do_add_tags(stamp, values['id'], values['tags'])
-
-        json = jsonlib.write({
-            'created': old_values.get('created', time()),
-            'title': values['title'],
-            'description': values['description'],
-            'tags': values['tags'],
-            'stamp': stamp,
-        })
-        self.redis.hset('link-info', key, json)
-
     def do_save_link(self, values):
-        values['id'] = self.do_save_url(values['url'])
-        values['tags'] = values['tags'][:]
-        values['tags'].append('user:' + values['user'])
-        values['tags'] = list(set(values['tags']))
-        self.do_save_link_user(values)
+        if not 'stamp' in values:
+            values['stamp'] = time()
+        old_values = self.db.links.find_one({'user': values['user'],
+                                             'url': values['url']})
+        if old_values:
+            values['_id'] = old_values['_id']
+        self.db.links.save(values)
 
     ### Various operations related to queues.
     def pop_queue(self, name):

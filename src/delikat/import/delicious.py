@@ -1,12 +1,12 @@
 import lxml.etree
 from time import mktime, strptime
 
-from store import Store
+from delikat.store import Store
 
 def import_delicious_dump(store, f, username):
     doc = lxml.etree.parse(f)
 
-    user_key = store.do_save_user(username)
+    user_key = username
 
     for post in doc.xpath('//post'):
         url = post.get('href')

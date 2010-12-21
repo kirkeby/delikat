@@ -15,7 +15,7 @@ def import_json_dump(store, f):
         stamp = mktime(strptime(data['updated'],
                                 time_format))
         user = clean_user_re.sub('', data['author'])
-        user_key = store.do_save_user(user)
+        user_key = user
         tags = [t['term']
                 for t in data.get('tags', [])]
         values = {

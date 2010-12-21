@@ -12,6 +12,7 @@ setup(
         ### These are for the backend.
         'lxml',
         'jsonlib',
+        'pymongo',
         'redis',
         ### These are for the web-apps.
         'genshi',
