@@ -13,7 +13,7 @@ class Context(object):
         self.endpoint, self.url_values = self.adapter.match()
         self.user = 'sune'
         self.values = {
-            'user': self.user,
+            'context': self,
         }
 
 class Application(object):

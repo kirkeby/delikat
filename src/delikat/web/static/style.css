@@ -13,6 +13,29 @@
 
 #main {
     margin-top: 2em;
+    margin-right: 21%;
+}
+
+#right {
+    position: absolute;
+    top: 2em;
+    left: 79%; width: 20%;
+}
+#right .tags {
+    margin: 0; padding: 0; width: 100%;
+    list-style-type: none;
+}
+#right .tags a {
+    text-decoration: none;
+    position: relative;
+    display: block;
+    width: 100%;
+    background: #eee;
+    border: thin solid white;
+}
+#right .tags a .c {
+    position: absolute;
+    right: .2em;
 }
 
 .left {
@@ -20,6 +43,10 @@
 }
 .right {
     float: right;
+}
+
+h1, h2, h3, h3, h4, h5, h6 {
+    padding: 0; margin: 0;
 }
 
 fieldset {

@@ -4,4 +4,8 @@ html
   head
     title | del.ik.at
   body
-    ${link_list(links)}
+    #right
+      h2 | related
+      ${tag_list(related_tags, plus=context.request.path)}
+    #main
+      ${link_list(links)}

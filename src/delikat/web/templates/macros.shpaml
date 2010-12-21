@@ -10,3 +10,10 @@ html py:strip=True
         a href=/x/${l['_id']} | delete
       .tags
         a py:for="tag in l['tags']" href=${tag} | ${tag}
+
+  ol.tags py:def="tag_list(tags, plus)"
+    li py:for="t in tags"
+      a href="${plus + '+' + t.tag if plus else t.tag}"
+        b py:if=plus | +
+        ${t.tag}
+        span.c | ${t.count}
