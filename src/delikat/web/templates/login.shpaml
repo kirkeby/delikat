@@ -1,0 +1,13 @@
+html
+  > xi:include href=page.shpaml
+  head
+    title | login &mdash; del.ik.at
+  body
+    #main
+      form method=POST action=${url_for('login')}
+        label
+          .b | login
+          > input name=login
+
+        div
+          > input type=submit value=login

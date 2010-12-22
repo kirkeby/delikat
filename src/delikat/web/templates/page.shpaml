@@ -9,7 +9,8 @@ html py:strip=""
         .left
           a href=/ | de.li.kat
         .right
-          a href=/${context.user}/ | ${context.user}
+          a py:if=context.user href=/${context.user}/ | ${context.user}
           a href=/_/help | help
-          | logout
+          a py:if=context.user href=/_/logout | logout
+          a py:if="not context.user" href=/_/login | login
       | ${select("*|text()")}

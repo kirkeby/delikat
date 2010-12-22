@@ -2,3 +2,4 @@
   different tags. And teach the worker about them.
 * Need formvalidation - for instance only allow ASCII tags (or at-least
   not tags which overlap the system ones...)
+* Need HTTPS and secure cookies.

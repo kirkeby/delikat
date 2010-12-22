@@ -6,6 +6,8 @@ from delikat.store import Store
 urls = Map([
     Rule('/_/save', endpoint='save_link', methods=['GET', 'POST']),
     Rule('/_/help', endpoint='help', methods=['GET']),
+    Rule('/_/login', endpoint='login', methods=['GET', 'POST']),
+    Rule('/_/logout', endpoint='logout', methods=['GET']),
     Rule('/<user>/', endpoint='user_tag', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
 ])
@@ -81,3 +83,23 @@ def get_help(ctx):
     save_url = ctx.adapter.build('save_link', force_external=True)
     ctx.values['bookmarklet'] = \
         ''.join(bookmarklet.split()).replace('__save_url__', save_url)
+
+@page
+def get_login(ctx):
+    if ctx.user:
+        ctx.response.status_code = 302
+        ctx.response.location = ctx.adapter.build('user_tag', user=ctx.user)
+
+@page
+def post_login(ctx):
+    user = ctx.request.session['user'] = ctx.request.form['login']
+    if user:
+        ctx.response.status_code = 302
+        ctx.response.location = ctx.adapter.build('user_tag',
+                                                  {'user': ctx.user})
+
+@page
+def get_logout(ctx):
+    ctx.request.session['user'] = None
+    ctx.response.status_code = 302
+    ctx.response.location = '/'
