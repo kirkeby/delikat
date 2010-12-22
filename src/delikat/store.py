@@ -47,6 +47,9 @@ class Store(object):
     def get_user_link(self, user, url):
         return self.db.links.find_one({'user': user, 'url': url})
 
+    def get_popular_links(self):
+        return []
+
     ### do_ are for background workers.
     def _find_old_link(self, values):
         for key in ['_id', 'url']:

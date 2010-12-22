@@ -4,6 +4,7 @@ from werkzeug.routing import Map, Rule
 from delikat.store import Store
 
 urls = Map([
+    Rule('/', endpoint='index', methods=['GET']),
     Rule('/_/save', endpoint='save_link', methods=['GET', 'POST']),
     Rule('/_/help', endpoint='help', methods=['GET']),
     Rule('/_/login', endpoint='login', methods=['GET', 'POST']),
@@ -36,6 +37,10 @@ def template_links(links):
         else:
             last_date = link['date']
     return links
+
+@page
+def get_index(ctx):
+    ctx.values['links'] = template_links(ctx.store.get_popular_links())
 
 @page
 def get_user_tag(ctx, user, tag=None):
