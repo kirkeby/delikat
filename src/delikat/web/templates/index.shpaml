@@ -5,4 +5,9 @@ html
     title | del.ik.at
   body
     #main
-      ${link_list(links)}
+      ol.links
+        li py:for="l in links"
+          .link
+            a href=${l.url} | ${l.title}
+          .tags
+            a py:for="tag in l.tags" href=/_/tag/${tag} | ${tag}

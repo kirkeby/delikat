@@ -40,7 +40,7 @@ def template_links(links):
 
 @page
 def get_index(ctx):
-    ctx.values['links'] = template_links(ctx.store.get_popular_links())
+    ctx.values['links'] = ctx.store.get_popular_links()
 
 @page
 def get_user_tag(ctx, user, tag=None):
