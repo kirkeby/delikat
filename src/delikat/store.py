@@ -81,3 +81,12 @@ class Store(object):
     def push_queue(self, name, values):
         wire = json.dumps(values, default=json_util.default)
         self.redis.rpush('q:' + name, wire)
+
+def main():
+    with Store() as store:
+        store.db.links.drop_indexes()
+        store.db.links.create_index([('user', 1), ('url', 1)],
+                                    unique=True)
+
+if __name__ == '__main__':
+    main()
