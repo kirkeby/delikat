@@ -60,11 +60,9 @@ class Application(object):
             return ctx.response.status
         template = self.template_for(ctx)
         stream = template.generate(
-            request=ctx.request,
-            response=ctx.response,
-            endpoint=ctx.endpoint,
-            url_values=ctx.url_values,
+            ctx=ctx,
             url_for=lambda e, **v: ctx.adapter.build(e, v),
+            resources=resources,
             **ctx.values
         )
         stream = stream | HTMLFormFiller(data=ctx.values)
@@ -72,6 +70,12 @@ class Application(object):
 
     def template_for(self, ctx):
         return template_loader.load(ctx.endpoint + '.shpaml')
+
+class resources:
+    class js:
+        jquery = 'https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.js'
+    class css:
+        site = '/static/style.css'
 
 def load_secret(name):
     if os.path.exists(name):

@@ -1,7 +1,7 @@
 html py:strip=""
   py:match path=head once=true
     head
-      > link rel=stylesheet type=text/css href=/static/style.css
+      > link rel=stylesheet type=text/css href=${resources.css.site}
       | ${select("*")}
   py:match path=body once=true
     body py:attrs=select('@*')
@@ -14,3 +14,5 @@ html py:strip=""
           a py:if=context.user href=/_/logout | logout
           a py:if="not context.user" href=/_/login | login
       | ${select("*|text()")}
+
+    > script type=text/javascript src=${resources.js.jquery}

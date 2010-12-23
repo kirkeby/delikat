@@ -2,12 +2,16 @@ html
   > xi:include href=page.shpaml
   head
     title | del.ik.at -- save link
-  body
+    script type=text/javascript py:if="saved and windowed"
+      window.close();
+
+  body#save-link
     #main
-      h1 | save link
-      h2 py:if=defined('notice') | ${notice}
+      h1 py:if="not saved" | save link
+      h1 py:if=saved | Ok.
       form method=POST action=${url_for('save_link')}
         > input type=hidden name=_id
+        > input type=hidden name=w value=1 py:if=ctx.request.args.get('w')
         fieldset
           label
             .b | url:

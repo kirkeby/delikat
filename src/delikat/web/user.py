@@ -59,6 +59,10 @@ def get_save_link(ctx):
         'title': ctx.request.args.get('title'),
     }
     ctx.values.update(values)
+    ctx.values.update({
+        'saved': False,
+        'windowed': ctx.request.form.has_key('w'),
+    })
 
 @page
 def post_save_link(ctx):
@@ -71,15 +75,22 @@ def post_save_link(ctx):
         'tags': ctx.request.form['tags'].split(),
     }
     ctx.store.queue_save_link(ctx.user, values)
-    ctx.values['notice'] = 'Ok.'
+    ctx.values.update(values)
+    ctx.values.update({
+        'saved': True,
+        'windowed': ctx.request.form.has_key('w'),
+    })
 
 bookmarklet = '''
-    javascript:(function() {
-        f = '__save_url__'
-          + '?url=' + encodeURIComponent(window.location.href)
-          + '&title=' + encodeURIComponent(document.title);
-        window.open(f, 'location=yes,links=no,scrollbars=no,' +
-                       'toolbar=no,width=550,height=550');
+    javascript: (function() {
+        window.open(
+            '__save_url__?w=1&url='
+            + encodeURIComponent(window.location.href)
+            + '&title=' + encodeURIComponent(document.title),
+            'delikat',
+            'location=yes,links=no,scrollbars=no,toolbar=no,'
+            + 'width=550,height=300'
+        );
     })();
 '''
 
