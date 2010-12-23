@@ -82,9 +82,6 @@ a, a:visited, a:hover {
     text-decoration: none;
 }
 
-.link a {
-    display: block;
-}
 .links .link:hover a {
     text-decoration: underline;
 }
