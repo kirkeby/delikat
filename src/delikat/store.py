@@ -2,8 +2,10 @@ from itertools import chain, groupby
 from hashlib import sha1
 from time import time
 import redis
-import jsonlib
+import json
 import pymongo
+from pymongo.objectid import ObjectId
+from pymongo import json_util
 
 from delikat.prelude import grouper
 
@@ -65,7 +67,8 @@ class Store(object):
             values['stamp'] = time()
         old_values = self._find_old_link(values)
         if old_values:
-            values['_id'] = str(old_values['_id'])
+            values['_id'] = ObjectId(old_values['_id'])
+            values['stamp'] = old_values['stamp']
         elif '_id' in values:
             del values['_id']
         self.db.links.save(values)
@@ -73,7 +76,8 @@ class Store(object):
     ### Various operations related to queues.
     def pop_queue(self, name):
         queue, value = self.redis.blpop('q:' + name)
-        return jsonlib.read(value, use_float=True)
+        return json.loads(value, object_hook=json_util.object_hook)
 
     def push_queue(self, name, values):
-        self.redis.rpush('q:' + name, jsonlib.write(values))
+        wire = json.dumps(values, default=json_util.default)
+        self.redis.rpush('q:' + name, wire)

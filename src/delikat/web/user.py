@@ -58,6 +58,7 @@ def get_save_link(ctx):
         'url': url,
         'title': ctx.request.args.get('title'),
     }
+    values['tags'] = ' '.join(values.get('tags', []))
     ctx.values.update(values)
     ctx.values.update({
         'saved': False,
