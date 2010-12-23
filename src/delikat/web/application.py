@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from werkzeug import BaseRequest, Response, cached_property
 from werkzeug.exceptions import HTTPException
 from werkzeug.contrib.securecookie import SecureCookie
@@ -7,6 +8,8 @@ from resolver import resolve
 from genshi.output import DocType
 from genshi.filters import HTMLFormFiller
 from delikat.web.templates import template_loader
+
+far_future = datetime(2037, 7, 7, 11, 22, 33)
 
 class Request(BaseRequest):
     @cached_property
@@ -46,7 +49,8 @@ class Application(object):
             ctx.response.data = self.render(ctx)
             ctx.request.session.save_cookie(ctx.response,
                                             key='auth',
-                                            httponly=True)
+                                            httponly=True,
+                                            expires=far_future)
             return ctx.response
         except HTTPException, e:
             return e
