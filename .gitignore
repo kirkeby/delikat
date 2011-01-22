@@ -1,4 +1,7 @@
 *~
+*.log
+*.pid
 *.egg-info
 *.pyc
 .*.secret
+tmp/
