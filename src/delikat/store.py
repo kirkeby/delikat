@@ -5,6 +5,7 @@ import redis
 import json
 import pymongo
 from pymongo.objectid import ObjectId
+from pymongo.errors import OperationFailure
 from pymongo import json_util
 
 from delikat.prelude import grouper
@@ -52,6 +53,18 @@ class Store(object):
     def get_popular_links(self, count=50):
         return list(self.db.popular.find().limit(count).sort('count', -1))
 
+    ### user accounts
+    def get_user_for_openid(self, openid):
+        return self.db.users.find_one({'openid': openid})
+
+    def register_user(self, login, openid):
+        try:
+            return self.db.users.insert({'login': login, 'openid': openid},
+                                        safe=True)
+        except OperationFailure:
+            # Ought to check that the failure really is a unique-index error.
+            return None
+
     ### do_ are for background workers.
     def _find_old_link(self, values):
         for key in ['_id', 'url']:
@@ -87,6 +100,10 @@ def main():
         store.db.links.drop_indexes()
         store.db.links.create_index([('user', 1), ('url', 1)],
                                     unique=True)
+
+        store.db.users.drop_indexes()
+        store.db.users.create_index([('login', 1)], unique=True)
+        store.db.users.create_index([('openid', 1)], unique=True)
 
 if __name__ == '__main__':
     main()

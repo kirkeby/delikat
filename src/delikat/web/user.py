@@ -3,12 +3,18 @@ from functools import update_wrapper
 from werkzeug.routing import Map, Rule
 from delikat.store import Store
 
+from openid.consumer.consumer import Consumer, SUCCESS
+from openid.consumer.discover import DiscoveryFailure
+from openid.store.filestore import FileOpenIDStore
+
 urls = Map([
     Rule('/', endpoint='index', methods=['GET']),
     Rule('/_/save', endpoint='save_link', methods=['GET', 'POST']),
     Rule('/_/help', endpoint='help', methods=['GET']),
     Rule('/_/login', endpoint='login', methods=['GET', 'POST']),
     Rule('/_/logout', endpoint='logout', methods=['GET']),
+    Rule('/_/openid-return', endpoint='openid_return', methods=['GET']),
+    Rule('/_/register', endpoint='register', methods=['GET', 'POST']),
     Rule('/<user>/', endpoint='user_tag', methods=['GET']),
     Rule('/<user>/<tag>', endpoint='user_tag', methods=['GET']),
 ])
@@ -105,15 +111,77 @@ def get_help(ctx):
 def get_login(ctx):
     if ctx.user:
         ctx.response.status_code = 302
-        ctx.response.location = ctx.adapter.build('user_tag', user=ctx.user)
+        ctx.response.location = ctx.adapter.build('user_tag',
+                                                  {'user': ctx.user})
+
+def make_consumer(ctx):
+    openid_store = FileOpenIDStore('/tmp/openid-store')
+    consumer = Consumer(ctx.request.session, openid_store)
+    return consumer
 
 @page
 def post_login(ctx):
-    user = ctx.request.session['user'] = ctx.request.form['login']
+    openid = ctx.request.form['openid']
+    if not openid:
+        return
+
+    realm = ctx.adapter.build('index', force_external=True)
+    return_to = ctx.adapter.build('openid_return', force_external=True)
+
+    try:
+        auth_req = make_consumer(ctx).begin(openid)
+        redirect_url = auth_req.redirectURL(realm, return_to)
+
+        ctx.response.status_code = 302
+        ctx.response.location = redirect_url
+
+    except DiscoveryFailure, e:
+        ctx.values['error'] = e.message
+
+    except Exception:
+        ctx.values['error'] = 'Something failed.'
+
+@page
+def get_openid_return(ctx):
+    return_to = ctx.adapter.build('openid_return', force_external=True)
+    result = make_consumer(ctx).complete(ctx.request.args, return_to)
+
+    ctx.response.status_code = 302
+    if result.status <> SUCCESS:
+        ctx.response.location = ctx.adapter.build('login')
+        return
+
+    user = ctx.store.get_user_for_openid(result.identity_url)
+
     if user:
+        login = ctx.request.session['user'] = user['login']
+        ctx.response.location = ctx.adapter.build('user_tag',
+                                                  {'user': login})
+    else:
+        ctx.request.session['openid'] = result.identity_url
+        ctx.response.location = ctx.adapter.build('register')
+
+@page
+def get_register(ctx):
+    ctx.values['openid'] = ctx.request.session.get('openid', 'imposter')
+
+@page
+def post_register(ctx):
+    openid = ctx.values['openid'] = ctx.request.session.get('openid')
+    if not openid:
+        ctx.response.status_code = 302
+        ctx.response.location = ctx.adapter.build('login')
+        return
+
+    login = ctx.request.form.get('login')
+    if ctx.store.register_user(login, openid):
+        del ctx.request.session['openid']
+        ctx.request.session['user'] = login
         ctx.response.status_code = 302
         ctx.response.location = ctx.adapter.build('user_tag',
-                                                  {'user': ctx.user})
+                                                  {'user': login})
+    else:
+        ctx.values['error'] = True
 
 @page
 def get_logout(ctx):

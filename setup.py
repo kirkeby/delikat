@@ -19,6 +19,7 @@ setup(
         'shpaml',
         'resolver',
         'werkzeug',
+        'python-openid',
         ### These are for running the web-apps in development.
         'PasteScript',
         'WSGIUtils',

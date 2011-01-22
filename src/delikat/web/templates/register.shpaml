@@ -1,0 +1,16 @@
+html
+  > xi:include href=page.shpaml
+  head
+    title | register &mdash; del.ik.at
+  body
+    #main
+      form method=POST action=${url_for('register')}
+        h1 | welcome ${openid}
+        | This is your first login at del.ik.at, please choose a username
+        | for this site:
+        div py:if=defined('error') | Sorry, that login is already taken.
+        div
+          > input name=login
+
+        div
+          > input type=submit value=register

@@ -5,9 +5,10 @@ html
   body
     #main
       form method=POST action=${url_for('login')}
+        div py:if=defined('error') | Error: ${error}
         label
-          .b | login
-          > input name=login
+          .b | openid
+          > input name=openid
 
         div
           > input type=submit value=login
