@@ -97,13 +97,16 @@ class Store(object):
 
 def main():
     with Store() as store:
-        store.db.links.drop_indexes()
-        store.db.links.create_index([('user', 1), ('url', 1)],
+        exists = store.db.collection_names()
+        for coll in ['links', 'users']:
+            if coll not in exists:
+                store.db.create_collection(coll)
+
+        store.db.links.ensure_index([('user', 1), ('url', 1)],
                                     unique=True)
 
-        store.db.users.drop_indexes()
-        store.db.users.create_index([('login', 1)], unique=True)
-        store.db.users.create_index([('openid', 1)], unique=True)
+        store.db.users.ensure_index([('login', 1)], unique=True)
+        store.db.users.ensure_index([('openid', 1)], unique=True)
 
 if __name__ == '__main__':
     main()
